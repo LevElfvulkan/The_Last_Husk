@@ -1,8 +1,8 @@
-
 import pygame
+import os
 from scr.config.settings import *
 from scr.modules.player import Player
-from scr.modules.world import Platform
+from scr.modules.world import Platform , Level
 from scr.modules.camera import Camera
 
 pygame.init()
@@ -16,16 +16,10 @@ clock = pygame.time.Clock()
 
 camera = Camera(800 , 600)
 
-
-
-
-platforms = pygame.sprite.Group()
-platforms.add(Platform(0, SCREEN_HEIGHT-100 , SCREEN_WIDTH , 20 , (255,100,50)))
-platforms.add(Platform(SCREEN_WIDTH-20 ,  0 , 20 , SCREEN_HEIGHT-100 , color=(255,100,50) ))
-platforms.add(Platform( 0,  0 , 20 , SCREEN_HEIGHT-100 , color=(255,100,50) ))
-platforms.add(Platform(400 , SCREEN_HEIGHT- 200  , 200 , 20 ,color=(255,100,50)))
-
-
+level = Level("test_map.tmx")
+if level is None:
+    raise ValueError("Не удалось загрузить файл level.tmx")
+collision = level.load_collisions()
 
 running = True
 while running:
@@ -35,18 +29,19 @@ while running:
             running = False
 
 
-    player.withPlatforms(platforms)
     camera.updatePlayer(player)
+    player.withPlatforms(level.load_collisions())
+
+
+
+
+
 
     #Отрисовка всех спрайтов
     screen.fill((255 , 255 ,255))
 
-
-
-    for plat in platforms:
-        screen.blit(plat.image , (plat.rect.x + camera.set.x ,
-                                  plat.rect.y + camera.set.y) )
-    screen.blit(player.image , (player.player_rect.x + camera.set.x , player.player_rect.y + camera.set.y))
+    level.draw_level(screen)
+    player.draw(screen)
     pygame.display.flip()
 
 pygаme.quit()
