@@ -11,7 +11,7 @@ screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Квест-игра")
 
 
-player= Player(200 , 0)
+player= Player(300 , 300)
 clock = pygame.time.Clock()
 
 camera = Camera(800 , 600)
