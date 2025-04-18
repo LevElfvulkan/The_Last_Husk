@@ -21,6 +21,20 @@ if level is None:
     raise ValueError("Не удалось загрузить файл level.tmx")
 collision = level.load_collisions()
 
+
+
+
+def draw_all():
+    level.draw_level(screen)
+    player.draw(screen)
+
+
+
+
+
+
+
+
 running = True
 while running:
     clock.tick(FPS)
@@ -28,20 +42,14 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
-
-    camera.updatePlayer(player)
-    player.withPlatforms(level.load_collisions())
-
-
+    player.update(level.load_collisions())
 
 
 
 
     #Отрисовка всех спрайтов
     screen.fill((255 , 255 ,255))
-
-    level.draw_level(screen)
-    player.draw(screen)
+    draw_all()
     pygame.display.flip()
 
 pygаme.quit()

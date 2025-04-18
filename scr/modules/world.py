@@ -25,7 +25,7 @@ class Level(pygame.sprite.Sprite):
     def load_collisions(self):
         collision_rects = []
 
-        # Вариант 1: Загрузка из Tile Layer
+
         if "map" in self.tmx_data.layernames:
             layer = self.tmx_data.get_layer_by_name("map")
             for x, y, tile in layer.tiles():
