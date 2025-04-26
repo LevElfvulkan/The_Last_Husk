@@ -4,11 +4,14 @@ from scr.config.settings import *
 from scr.modules.player import Player
 from scr.modules.world import Platform , Level
 from scr.modules.camera import Camera
-
+from scr.modules.enemy import Enemy
 pygame.init()
 
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 pygame.display.set_caption("Квест-игра")
+
+
+enemy = Enemy(500 ,300)
 
 
 player= Player(300 , 300)
@@ -27,6 +30,7 @@ collision = level.load_collisions()
 def draw_all():
     level.draw_level(screen)
     player.draw(screen)
+    enemy.draw(screen)
 
 
 
@@ -42,7 +46,8 @@ while running:
         if event.type == pygame.QUIT:
             running = False
 
-    player.update(level.load_collisions())
+    player.update(level.load_collisions() , enemy)
+    enemy.update(level.load_collisions() , player)
 
 
 

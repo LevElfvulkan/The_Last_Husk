@@ -30,6 +30,11 @@ class Player(pygame.sprite.Sprite):
         self.attack_block_rects = []
         self.animation = 0
         self.attack_animation = 0
+        self.health  = 100
+        self.damage = 10
+        self.invincible = False
+        self.invincible_timer = 0
+        self.invincible_duration = 60
 
 
     def move(self):
@@ -52,14 +57,10 @@ class Player(pygame.sprite.Sprite):
                     self.is_on_ground = False
 
 
-    # def attack(self):
-    #     if not self.is_attacking  :
-    #         self.is_attacking = True
-    #         self.update_attack_rect()
 
 
     def attack_rect(self):
-        attack_width = 55
+        attack_width = 67
         if self.rightRun or (not self.leftRun and not self.rightRun):
             self.attackRect = pygame.Rect(
                 self.player_rect.right,
@@ -69,7 +70,7 @@ class Player(pygame.sprite.Sprite):
             )
         else:
             self.attackRect = pygame.Rect(
-                self.player_rect.left - 25,
+                self.player_rect.left - attack_width,
                 self.player_rect.y,
                 attack_width,
                 self.player_rect.height
@@ -88,10 +89,11 @@ class Player(pygame.sprite.Sprite):
             self.attack_rect()
     def update_attack(self):
         if self.is_attacking :
+            self.attack_rect()
             self.attack_animation +=1
             if self.attack_animation >= 48:
                 self.is_attacking = False
-                self.attack_animation =  0
+                self.attack_animation =0
 
 
 
@@ -105,7 +107,7 @@ class Player(pygame.sprite.Sprite):
                     self.player_rect.right = rect.left
 
 
-    def withPlatforms(self , collision):
+    def withPlatforms(self , collision , enemy):
 
         self.y_speed += self.gravity
         self.player_rect.y += self.y_speed
@@ -124,6 +126,13 @@ class Player(pygame.sprite.Sprite):
             elif self.y_speed > 0 and self.player_rect.y > 800 :
                 self.player_rect.x = 200
                 self.player_rect.y = 100
+
+        if enemy.activate and self.player_rect.colliderect(enemy.rect):
+
+            if self.player_rect.left < enemy.rect.right and self.player_rect.left >= enemy.rect.left:
+                self.player_rect.left = enemy.rect.right
+            elif self.player_rect.right > enemy.rect.left and self.player_rect.right <= enemy.rect.right:
+                self.player_rect.right = enemy.rect.left
 
         self.move()
         self.lateralPLatf(collision)
@@ -147,9 +156,21 @@ class Player(pygame.sprite.Sprite):
                         self.attackRect.x = block.right
                 break
 
-    def update(self, collisions):
-        self.withPlatforms(collisions)
+
+
+
+
+
+
+
+
+
+
+    def update(self, collisions , enemy):
+        self.withPlatforms(collisions , enemy)
         self.update_attack()
+
+
 
 
         keys = pygame.key.get_pressed()
@@ -157,6 +178,7 @@ class Player(pygame.sprite.Sprite):
             self.attack(collisions)
 
         if self.is_attacking:
+            self.attack_rect()
             self.attack_collision(collisions)
 
 
@@ -193,8 +215,7 @@ class Player(pygame.sprite.Sprite):
             else:
                 screen.blit(self.playerIdle[self.animation // 6] , (self.player_rect.x ,self.player_rect.y))
                 self.animation += 1
-        if self.is_attacking:
-            pygame.draw.rect(screen, (255, 0, 0), self.attackRect, 1)
+
 
 
 

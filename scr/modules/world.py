@@ -15,6 +15,9 @@ class Level(pygame.sprite.Sprite):
     def __init__(self , filename):
         self.tmx_data = pytmx.load_pygame(filename)
 
+
+
+
     def draw_level(self , screen):
         for layer in self.tmx_data.visible_layers:
             if hasattr(layer, 'tiles'):
