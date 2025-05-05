@@ -19,15 +19,20 @@ class Enemy(pygame.sprite.Sprite):
         self.gravity = 0.5
         self.y_speed = 0
         self.direction = 1
-        self.health = 50
+        self.health = 1000
         self.damage = 10
-        self.garbage = 5
+
         self.activate = True
+        self.knockback_delay  = 0
+        self.knockback_direction = 1
+        self.knockback_speed = 30
+        self.knockback_damping = 0.6
+        self.is_knockback = False
+
 
     def handle_collision(self, player):
-
+        #с игроком
         if player.player_rect.colliderect(self.rect):
-
             if player.player_rect.right > self.rect.left and player.player_rect.left >= self.rect.right :
                 player.player_rect.right = self.rect.left
             if player.player_rect.left > self.rect.right and player.player_rect.right <= self.rect.left:
@@ -42,6 +47,14 @@ class Enemy(pygame.sprite.Sprite):
                 player.player_rect.top = self.rect.bottom
                 player.y_speed = 0
     def update(self, collision_rects , player):
+
+        if self.knockback_delay > 0 :
+            self.knockback_delay -=1
+            if self.knockback_delay == 0:
+                self.rect.x += self.knockback_speed
+                self.knockback_speed *= self.knockback_damping
+
+
         # гравитация
         self.y_speed += self.gravity
         self.rect.y += self.y_speed
@@ -58,6 +71,11 @@ class Enemy(pygame.sprite.Sprite):
                     self.rect.top = rect.bottom
                     self.y_speed = 0
         self.handle_collision(player)
+
+        if self.health <= 0:
+            self.activate = False
+
+
 
 
 

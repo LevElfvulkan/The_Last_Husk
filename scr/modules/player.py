@@ -31,10 +31,11 @@ class Player(pygame.sprite.Sprite):
         self.animation = 0
         self.attack_animation = 0
         self.health  = 100
-        self.damage = 10
+        self.damage = 20
         self.invincible = False
         self.invincible_timer = 0
         self.invincible_duration = 60
+        self.has_hit_damage = False
 
 
     def move(self):
@@ -94,6 +95,7 @@ class Player(pygame.sprite.Sprite):
             if self.attack_animation >= 48:
                 self.is_attacking = False
                 self.attack_animation =0
+                self.has_hit_damage = False
 
 
 
@@ -159,9 +161,18 @@ class Player(pygame.sprite.Sprite):
 
 
 
+    def attack_enemy(self ,  enemy):
+        if self.is_attacking and self.attackRect.colliderect(enemy.rect) and enemy.activate and not self.has_hit_damage :
+            self.has_hit_damage = True
+            enemy.health -= self.damage
+            enemy.knockback_delay = 40
 
-
-
+            if self.rightRun or  (not self.leftRun and not self.rightRun):
+                enemy.knockback_direction = 1
+                enemy.knockback_speed = 25 * enemy.knockback_direction
+            else:
+                enemy.knockback_direction = -1
+                enemy.knockback_speed = 25 * enemy.knockback_direction
 
 
 
@@ -169,25 +180,19 @@ class Player(pygame.sprite.Sprite):
     def update(self, collisions , enemy):
         self.withPlatforms(collisions , enemy)
         self.update_attack()
-
-
-
-
         keys = pygame.key.get_pressed()
         if keys[pygame.K_z]:
             self.attack(collisions)
-
         if self.is_attacking:
             self.attack_rect()
             self.attack_collision(collisions)
+            self.attack_enemy(enemy)
 
 
 
 
     def draw(self , screen):
-
         if self.is_attacking :
-
             self.attack_index = min(self.attack_animation // (48 // len(self.rightAttack )),
                                    len(self.leftAttack) - 1)
             if self.rightRun:
