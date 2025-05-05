@@ -16,6 +16,7 @@ class Player(pygame.sprite.Sprite):
         self.player_rect.x = x
         self.player_rect.y = y
         self.playerIdle = [pygame.image.load('C:/gameHollowKnight/The_Last_Husk/assets/sprites/idlePlayer/idle-with-weapon-1.png')  , pygame.image.load('C:/gameHollowKnight/The_Last_Husk/assets/sprites/idlePlayer/idle-with-weapon-2.png'),pygame.image.load('C:/gameHollowKnight/The_Last_Husk/assets/sprites/idlePlayer/idle-with-weapon-3.png'), pygame.image.load('C:/gameHollowKnight/The_Last_Husk/assets/sprites/idlePlayer/idle-with-weapon-4.png'),pygame.image.load('C:/gameHollowKnight/The_Last_Husk/assets/sprites/idlePlayer/idle-with-weapon-5.png'),pygame.image.load('C:/gameHollowKnight/The_Last_Husk/assets/sprites/idlePlayer/idle-with-weapon-6.png') ]
+        self.face_right = True
         self.playerRunRight = [pygame.image.load('C:/gameHollowKnight/The_Last_Husk/assets/sprites/runPLayer/run-1.png') , pygame.image.load('C:/gameHollowKnight/The_Last_Husk/assets/sprites/runPLayer/run-2.png'),pygame.image.load('C:/gameHollowKnight/The_Last_Husk/assets/sprites/runPLayer/run-3.png') , pygame.image.load('C:/gameHollowKnight/The_Last_Husk/assets/sprites/runPLayer/run-4.png') , pygame.image.load('C:/gameHollowKnight/The_Last_Husk/assets/sprites/runPLayer/run-5.png') , pygame.image.load('C:/gameHollowKnight/The_Last_Husk/assets/sprites/runPLayer/run-6.png')]
         self.playerRunLeft = [pygame.transform.flip(f, True , False) for f in self.playerRunRight]
         self.animation_run = 0
@@ -45,10 +46,12 @@ class Player(pygame.sprite.Sprite):
                 self.player_rect.x -= self.x_speed
                 self.rightRun = False
                 self.leftRun = True
+                self.face_right = False
             elif keys[pygame.K_RIGHT]:
                 self.player_rect.x +=self.x_speed
                 self.rightRun = True
                 self.leftRun = False
+                self.face_right = True
             else :
                 self.rightRun = False
                 self.leftRun = False
@@ -195,17 +198,16 @@ class Player(pygame.sprite.Sprite):
         if self.is_attacking :
             self.attack_index = min(self.attack_animation // (48 // len(self.rightAttack )),
                                    len(self.leftAttack) - 1)
-            if self.rightRun:
+            if self.face_right:
                 screen.blit(self.rightAttack[self.attack_index] , (self.player_rect.x  , self.player_rect.y))
-            if self.leftRun:
+            if not self.face_right:
                 if self.attack_index in [4,5] :
                     offset_x = 30
                     screen.blit(self.leftAttack[self.attack_index], (self.player_rect.x - offset_x, self.player_rect.y))
                 else:
                     screen.blit(self.leftAttack[self.attack_index], (self.player_rect.x  , self.player_rect.y))
 
-            if self.rightRun == False and self.leftRun == False:
-                screen.blit(self.rightAttack[self.attack_index], (self.player_rect.x, self.player_rect.y))
+
 
         else:
             if self.animation >= 24:
@@ -218,8 +220,13 @@ class Player(pygame.sprite.Sprite):
                 screen.blit(self.playerRunRight[self.animation // 12], (self.player_rect.x ,self.player_rect.y))
                 self.animation +=1
             else:
-                screen.blit(self.playerIdle[self.animation // 6] , (self.player_rect.x ,self.player_rect.y))
-                self.animation += 1
+                if self.face_right:
+                    screen.blit(self.playerIdle[self.animation // 6] , (self.player_rect.x ,self.player_rect.y))
+                    self.animation += 1
+                else:
+                    flipped_idle = [pygame.transform.flip(img, True, False) for img in self.playerIdle]
+                    screen.blit(flipped_idle[self.animation // 6], (self.player_rect.x, self.player_rect.y))
+                    self.animation += 1
 
 
 
