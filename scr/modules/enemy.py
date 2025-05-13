@@ -19,7 +19,7 @@ class Enemy(pygame.sprite.Sprite):
         self.gravity = 0.5
         self.y_speed = 0
         self.direction = 1
-        self.health = 1000
+        self.health =1000
         self.damage = 10
 
         self.activate = True
@@ -28,10 +28,17 @@ class Enemy(pygame.sprite.Sprite):
         self.knockback_speed = 30
         self.knockback_damping = 0.6
         self.is_knockback = False
+        self.attack_cooldown = 0
 
 
     def handle_collision(self, player):
-        #с игроком
+
+        if self.activate and player.player_rect.colliderect(self.rect) and self.attack_cooldown <= 0:
+            player.take_damage(self.damage)
+            self.attack_cooldown = 60
+        # с игроком
+        if self.attack_cooldown > 0:
+            self.attack_cooldown -= 1
         if player.player_rect.colliderect(self.rect):
             if player.player_rect.right > self.rect.left and player.player_rect.left >= self.rect.right :
                 player.player_rect.right = self.rect.left
@@ -74,12 +81,6 @@ class Enemy(pygame.sprite.Sprite):
 
         if self.health <= 0:
             self.activate = False
-
-
-
-
-
-
 
     def draw(self , screen):
         if not self.activate:

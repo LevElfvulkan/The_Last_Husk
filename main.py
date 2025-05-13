@@ -33,12 +33,6 @@ def draw_all():
     enemy.draw(screen)
 
 
-
-
-
-
-
-
 running = True
 while running:
     clock.tick(FPS)
@@ -48,9 +42,6 @@ while running:
 
     player.update(level.load_collisions() , enemy)
     enemy.update(level.load_collisions() , player)
-
-
-
 
     #Отрисовка всех спрайтов
     screen.fill((255 , 255 ,255))
