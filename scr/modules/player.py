@@ -106,7 +106,7 @@ class Player(pygame.sprite.Sprite):
     def update_attack(self):
         if self.is_attacking :
             self.attack_rect()
-            self.attack_animation +=1
+            self.attack_animation +=2
             if self.attack_animation >= 48:
                 self.is_attacking = False
                 self.attack_animation =0
@@ -208,7 +208,7 @@ class Player(pygame.sprite.Sprite):
         if self.is_attacking and self.attackRect.colliderect(enemy.rect) and enemy.activate and not self.has_hit_damage :
             self.has_hit_damage = True
             enemy.health -= self.damage
-            enemy.knockback_delay = 40
+            enemy.knockback_delay = 10
 
             if self.face_right :
                 enemy.knockback_direction = 1

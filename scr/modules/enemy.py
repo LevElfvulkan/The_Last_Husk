@@ -6,6 +6,7 @@ class Enemy(pygame.sprite.Sprite):
         super().__init__()
         self.enemyIdle = [ pygame.image.load('C:/gameHollowKnight/The_Last_Husk/assets/sprites/enemyIdle/Golem1.png') , pygame.image.load('C:/gameHollowKnight/The_Last_Husk/assets/sprites/enemyIdle/Golem2.png') , pygame.image.load('C:/gameHollowKnight/The_Last_Husk/assets/sprites/enemyIdle/Golem3.png') , pygame.image.load('C:/gameHollowKnight/The_Last_Husk/assets/sprites/enemyIdle/Golem4.png') , pygame.image.load('C:/gameHollowKnight/The_Last_Husk/assets/sprites/enemyIdle/Golem5.png') ,pygame.image.load('C:/gameHollowKnight/The_Last_Husk/assets/sprites/enemyIdle/Golem6.png') , pygame.image.load('C:/gameHollowKnight/The_Last_Husk/assets/sprites/enemyIdle/Golem7.png') , pygame.image.load('C:/gameHollowKnight/The_Last_Husk/assets/sprites/enemyIdle/Golem8.png') ]
         self.enemyRun = [pygame.image.load('C:/gameHollowKnight/The_Last_Husk/assets/sprites/enemyRun/Golem1walk.png') , pygame.image.load('C:/gameHollowKnight/The_Last_Husk/assets/sprites/enemyRun/Golem2walk.png') , pygame.image.load('C:/gameHollowKnight/The_Last_Husk/assets/sprites/enemyRun/Golem3walk.png') , pygame.image.load('C:/gameHollowKnight/The_Last_Husk/assets/sprites/enemyRun/Golem4walk.png') , pygame.image.load('C:/gameHollowKnight/The_Last_Husk/assets/sprites/enemyRun/Golem5walk.png') , pygame.image.load('C:/gameHollowKnight/The_Last_Husk/assets/sprites/enemyRun/Golem6walk.png') , pygame.image.load('C:/gameHollowKnight/The_Last_Husk/assets/sprites/enemyRun/Golem7walk.png') , pygame.image.load('C:/gameHollowKnight/The_Last_Husk/assets/sprites/enemyRun/Golem8walk.png') , pygame.image.load('C:/gameHollowKnight/The_Last_Husk/assets/sprites/enemyRun/Golem9walk.png') , pygame.image.load('C:/gameHollowKnight/The_Last_Husk/assets/sprites/enemyRun/Golem10walk.png')]
+        self.enemyDeath = [pygame.image.load(f'C:/gameHollowKnight/The_Last_Husk/assets/sprites/deathEnemy/Golem_{i}_die.png') for i in range(1, 13)]
         self.enemyWidth = 39
         self.enemyHeight = 38
 
@@ -16,11 +17,11 @@ class Enemy(pygame.sprite.Sprite):
         self.rect.x = x
         self.rect.y = y
         self.on_ground = False
-        self.speed = 1
+        self.speed = 0.7
         self.gravity = 0.5
         self.y_speed = 0
         self.direction = 1
-        self.health =1000
+        self.health =10
         self.damage = 10
 
         self.activate = True
@@ -30,6 +31,16 @@ class Enemy(pygame.sprite.Sprite):
         self.knockback_damping = 0.6
         self.is_knockback = False
         self.attack_cooldown = 0
+
+        self.is_dying = False
+        self.death_animation_frame = 0
+        self.death_animation_speed = 0.3
+        self.death_delay = 12
+
+        self.original_x = x
+        self.patrol_range = 100
+
+
 
 
     def handle_collision(self, player):
@@ -55,16 +66,25 @@ class Enemy(pygame.sprite.Sprite):
                 player.player_rect.top = self.rect.bottom
                 player.y_speed = 0
     def update(self, collision_rects , player):
+        if self.is_dying:
+            if self.death_delay > 0:
+                self.death_delay -=1
+                return
+            self.death_animation_frame += self.death_animation_speed
+            if self.death_animation_frame >= len(self.enemyDeath):
+                self.activate = False
 
-        if abs(self.rect.x - player.player_rect.x) < 200:  # 200 - радиус обнаружения
+            return
+        if self.health <=0 and not self.is_dying:
 
-            if player.player_rect.x < self.rect.x:
-                self.direction = -1
-            else:
-                self.direction = 1
-        else:
+            self.death_animation()
+            return
 
-            pass
+        if self.rect.x > self.original_x + self.patrol_range / 2:
+            self.direction = -1  # Разворачиваемся если вышли за правую границу
+        elif self.rect.x < self.original_x - self.patrol_range / 2:
+            self.direction = 1  # Разворачиваемся если вышли за левую границу
+
         if self.knockback_delay > 0 :
             self.knockback_delay -=1
             if self.knockback_delay == 0:
@@ -100,11 +120,38 @@ class Enemy(pygame.sprite.Sprite):
                     self.direction *= -1
                     break
 
-        if self.health <= 0:
-            self.activate = False
+
+    def death_animation(self):
+        self.is_dying = True
+        self.death_animation_frame = 0
+        self.speed = 0
+        self.death_delay = 12
+
+
 
     def draw(self, screen):
-        if not self.activate:
+        if not self.activate and not self.is_dying:
+            return
+
+        if self.is_dying:
+
+            if self.death_delay > 0:
+                if abs(self.speed * self.direction) > 0.1:
+                    current_frame = self.enemyRun[-1]  # Последний кадр бега
+                else:
+                    current_frame = self.enemyIdle[-1]  # Последний кадр idle
+
+                if self.direction < 0:
+                    current_frame = pygame.transform.flip(current_frame, True, False)
+                screen.blit(current_frame, (self.rect.x, self.rect.y))
+                return
+
+                # Отрисовка анимации смерти
+            frame_index = min(int(self.death_animation_frame), len(self.enemyDeath) - 1)
+            current_frame = self.enemyDeath[frame_index]
+            if self.direction < 0:
+                current_frame = pygame.transform.flip(current_frame, True, False)
+            screen.blit(current_frame, (self.rect.x, self.rect.y - 5))
             return
 
         if self.animation >= 40:

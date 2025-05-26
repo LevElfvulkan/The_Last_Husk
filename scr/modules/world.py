@@ -17,7 +17,6 @@ class Level(pygame.sprite.Sprite):
 
 
 
-
     def draw_level(self , screen):
         for layer in self.tmx_data.visible_layers:
             if hasattr(layer, 'tiles'):
@@ -40,5 +39,4 @@ class Level(pygame.sprite.Sprite):
                         self.tmx_data.tileheight
                     ))
         return collision_rects
-
 
