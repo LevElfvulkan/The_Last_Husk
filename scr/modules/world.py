@@ -14,12 +14,18 @@ class Platform(pygame.sprite.Sprite):
 class Level(pygame.sprite.Sprite):
     def __init__(self , filename):
         self.tmx_data = pytmx.load_pygame(filename)
-        self._exit_zone = None
+        self.background = None
+
+        try :
+            self.background = pygame.image.load("assets/bg/Bg_level.jpg").convert()
+            self.background = pygame.transform.scale(self.background,(960 , 800))
+        except:
+            self.background = pygame.Surface((960, 800))
+            self.background.fill((0, 0, 0))
+            print(f"Фон для уровня  не найден, используется черный фон")
 
     def load_collisions(self):
         collision_rects = []
-
-
         if "map" in self.tmx_data.layernames:
             layer = self.tmx_data.get_layer_by_name("map")
             for x, y, tile in layer.tiles():
@@ -33,6 +39,8 @@ class Level(pygame.sprite.Sprite):
         return collision_rects
 
     def draw_level(self, surface):
+        if self.background:
+            surface.blit(self.background, (0 ,0))
         for layer in self.tmx_data.visible_layers:
             if hasattr(layer, 'tiles'):
                 for x, y, image in layer.tiles():
