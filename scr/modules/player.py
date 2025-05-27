@@ -53,6 +53,15 @@ class Player(pygame.sprite.Sprite):
         self.exit_rect = None
         self.level_complete = False
         self.exit_cooldown = 0
+        self.hit_stun_timer = 0  # Таймер стана после удара
+        self.hit_stun_duration = 30 # 0.5 секунды при 60 FPS
+        self.can_move = True  # Может ли игрок двигаться
+        self.blink_timer = 0  # Таймер мигания
+        self.blink_interval = 5  # Частота мигания (кадры)
+        self.visible = True  # Видимость спрайта
+        self.hit_knockback = 10  # Сила отбрасывания при ударе
+
+    # Может ли игрок двигаться
     def move(self):
         keys = pygame.key.get_pressed()
         if not self.is_attacking:
@@ -121,9 +130,14 @@ class Player(pygame.sprite.Sprite):
                 self.health = 0
                 self.is_dead = True
                 self.death_animation = 0
+
             self.invincible = True
             self.invincible_timer = self.invincible_duration
             self.hit_cooldown = 30
+            self.hit_stun_timer = self.hit_stun_duration
+            self.can_move = False
+            self.blink_timer = self.blink_interval
+            self.visible = True
 
     def draw_health_bar(self, screen):
         #полоска здоровья
@@ -228,66 +242,80 @@ class Player(pygame.sprite.Sprite):
                 self.death_finished = True
 
     def update(self, collisions , enemy):
+
+        if self.hit_stun_timer > 0:
+            self.hit_stun_timer -= 1
+            if self.hit_stun_timer <= 0:
+                self.can_move = True
+
+        if self.invincible:
+            self.invincible_timer -= 1
+            self.blink_timer -= 1
+            if self.blink_timer <= 0:
+                self.visible = not self.visible
+                self.blink_timer = self.blink_interval
+            if self.invincible_timer <= 0:
+                self.invincible = False
+                self.visible = True
+
+
         if self.is_dead:
             self.death()
-        if self.hit_cooldown > 0:
-            self.hit_cooldown -=1
-        if self.invincible:
-            self.invincible_timer -=1
-            if self.invincible_timer <= 0:
-                self.invincible =False
-        self.withPlatforms(collisions , enemy)
-        self.update_attack()
-        keys = pygame.key.get_pressed()
-        if keys[pygame.K_z]:
-            self.attack(collisions)
-        if self.is_attacking:
-            self.attack_rect()
-            self.attack_collision(collisions)
-            self.attack_enemy(enemy)
+        if self.can_move:
+            if self.hit_cooldown > 0:
+                self.hit_cooldown -=1
+            if self.invincible:
+                self.invincible_timer -=1
+                if self.invincible_timer <= 0:
+                    self.invincible =False
+            self.withPlatforms(collisions , enemy)
+            self.update_attack()
+            keys = pygame.key.get_pressed()
+            if keys[pygame.K_z]:
+                self.attack(collisions)
+            if self.is_attacking:
+                self.attack_rect()
+                self.attack_collision(collisions)
+                self.attack_enemy(enemy)
 
 
 
     def draw(self , screen):
-        if self.is_dead:
-            screen.blit(self.playerDeath[self.death_animation], (self.player_rect.x , self.player_rect.y))
-            return
-        if self.is_attacking :
-            self.attack_index = min(self.attack_animation // (36// len(self.rightAttack )),
-                                   len(self.leftAttack) - 1)
-            if self.face_right:
-                screen.blit(self.rightAttack[self.attack_index] , (self.player_rect.x  , self.player_rect.y))
-            if not self.face_right:
-                if self.attack_index in [4,5] :
-                    offset_x = 30
-                    screen.blit(self.leftAttack[self.attack_index], (self.player_rect.x - offset_x, self.player_rect.y))
+
+            if self.is_dead:
+                screen.blit(self.playerDeath[self.death_animation], (self.player_rect.x , self.player_rect.y))
+                return
+            if self.visible or not self.invincible:
+                if self.is_attacking :
+                    self.attack_index = min(self.attack_animation // (36// len(self.rightAttack )),
+                                           len(self.leftAttack) - 1)
+                    if self.face_right:
+                        screen.blit(self.rightAttack[self.attack_index] , (self.player_rect.x  , self.player_rect.y))
+                    if not self.face_right:
+                        if self.attack_index in [4,5] :
+                            offset_x = 30
+                            screen.blit(self.leftAttack[self.attack_index], (self.player_rect.x - offset_x, self.player_rect.y))
+                        else:
+                            screen.blit(self.leftAttack[self.attack_index], (self.player_rect.x  , self.player_rect.y))
+
+
+
                 else:
-                    screen.blit(self.leftAttack[self.attack_index], (self.player_rect.x  , self.player_rect.y))
+                    if self.animation >= 24:
+                        self.animation = 0
+                    if (self.leftRun) and (self.rightRun == False):
+                        screen.blit(self.playerRunLeft[self.animation // 12] , (self.player_rect.x ,self.player_rect.y))
+                        self.animation += 1
+                    elif (self.rightRun) and (self.leftRun == False):
 
-
-
-        else:
-            if self.animation >= 24:
-                self.animation = 0
-            if (self.leftRun) and (self.rightRun == False):
-                screen.blit(self.playerRunLeft[self.animation // 12] , (self.player_rect.x ,self.player_rect.y))
-                self.animation += 1
-            elif (self.rightRun) and (self.leftRun == False):
-
-                screen.blit(self.playerRunRight[self.animation // 12], (self.player_rect.x ,self.player_rect.y))
-                self.animation +=1
-            else:
-                if self.face_right:
-                    screen.blit(self.playerIdle[self.animation // 6] , (self.player_rect.x ,self.player_rect.y))
-                    self.animation += 1
-                else:
-                    flipped_idle = [pygame.transform.flip(img, True, False) for img in self.playerIdle]
-                    screen.blit(flipped_idle[self.animation // 6], (self.player_rect.x, self.player_rect.y))
-                    self.animation += 1
-        self.draw_health_bar(screen)
-
-
-
-
-
-
+                        screen.blit(self.playerRunRight[self.animation // 12], (self.player_rect.x ,self.player_rect.y))
+                        self.animation +=1
+                    else:
+                        if self.face_right:
+                            screen.blit(self.playerIdle[self.animation // 6] , (self.player_rect.x ,self.player_rect.y))
+                            self.animation += 1
+                        else:
+                            flipped_idle = [pygame.transform.flip(img, True, False) for img in self.playerIdle]
+                            screen.blit(flipped_idle[self.animation // 6], (self.player_rect.x, self.player_rect.y))
+                            self.animation += 1
+            self.draw_health_bar(screen)

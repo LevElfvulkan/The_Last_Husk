@@ -48,10 +48,15 @@ class Enemy(pygame.sprite.Sprite):
         if ((self.activate and self.attack_cooldown <= 0) and (player.player_rect.colliderect(self.rect))):
             player.take_damage(self.damage)
             self.attack_cooldown = 60
-            
+            if player.face_right == False :
+                player.player_rect.left = player.player_rect.left + 50
+            else:
+                player.player_rect.right = player.player_rect.right - 50
+
         # с игроком
         if self.attack_cooldown > 0:
             self.attack_cooldown -= 1
+
         if player.player_rect.colliderect(self.rect):
             if player.player_rect.right > self.rect.left and player.player_rect.left >= self.rect.right :
                 player.player_rect.right = self.rect.left
