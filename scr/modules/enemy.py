@@ -38,24 +38,27 @@ class Enemy(pygame.sprite.Sprite):
         self.death_delay = 12
 
         self.original_x = x
-        self.patrol_range = 100
+        self.patrol_range = 250
 
 
 
 
     def handle_collision(self, player):
 
-        if (self.activate and self.attack_cooldown <= 0) and (player.player_rect.right == self.rect.left or  player.player_rect.left == self.rect.right) :
+        if ((self.activate and self.attack_cooldown <= 0) and (player.player_rect.colliderect(self.rect))):
             player.take_damage(self.damage)
             self.attack_cooldown = 60
+            
         # с игроком
         if self.attack_cooldown > 0:
             self.attack_cooldown -= 1
         if player.player_rect.colliderect(self.rect):
             if player.player_rect.right > self.rect.left and player.player_rect.left >= self.rect.right :
                 player.player_rect.right = self.rect.left
+
             if player.player_rect.left > self.rect.right and player.player_rect.right <= self.rect.left:
                 player.player_rect.left = self.rect.right-20
+
 
 
             if player.player_rect.bottom < self.rect.top:

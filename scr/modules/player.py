@@ -50,7 +50,9 @@ class Player(pygame.sprite.Sprite):
                            pygame.image.load('C:/gameHollowKnight/The_Last_Husk/assets/sprites/death/dead-5.png'),
                            pygame.image.load('C:/gameHollowKnight/The_Last_Husk/assets/sprites/death/dead-6.png')]
 
-
+        self.exit_rect = None
+        self.level_complete = False
+        self.exit_cooldown = 0
     def move(self):
         keys = pygame.key.get_pressed()
         if not self.is_attacking:
@@ -153,11 +155,8 @@ class Player(pygame.sprite.Sprite):
 
 
     def withPlatforms(self , collision , enemy):
-
         self.y_speed += self.gravity
         self.player_rect.y += self.y_speed
-
-
         self.is_on_ground = False
         for rect in collision:
             if self.player_rect.colliderect(rect):
@@ -246,7 +245,6 @@ class Player(pygame.sprite.Sprite):
             self.attack_rect()
             self.attack_collision(collisions)
             self.attack_enemy(enemy)
-
 
 
 

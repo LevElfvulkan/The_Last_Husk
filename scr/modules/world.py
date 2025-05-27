@@ -14,15 +14,7 @@ class Platform(pygame.sprite.Sprite):
 class Level(pygame.sprite.Sprite):
     def __init__(self , filename):
         self.tmx_data = pytmx.load_pygame(filename)
-
-
-
-    def draw_level(self , screen):
-        for layer in self.tmx_data.visible_layers:
-            if hasattr(layer, 'tiles'):
-                for x, y, image in layer.tiles():
-                    if image:
-                        screen.blit(image, (x * self.tmx_data.tilewidth, y * self.tmx_data.tileheight))
+        self._exit_zone = None
 
     def load_collisions(self):
         collision_rects = []
@@ -40,3 +32,13 @@ class Level(pygame.sprite.Sprite):
                     ))
         return collision_rects
 
+    def draw_level(self, surface):
+        for layer in self.tmx_data.visible_layers:
+            if hasattr(layer, 'tiles'):
+                for x, y, image in layer.tiles():
+                    if image:
+                        surface.blit(
+                            image,
+                            (x * self.tmx_data.tilewidth,
+                             y * self.tmx_data.tileheight)
+                        )
