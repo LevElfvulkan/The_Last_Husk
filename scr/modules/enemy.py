@@ -22,6 +22,7 @@ class Enemy(pygame.sprite.Sprite):
         self.y_speed = 0
         self.direction = 1
         self.health =10
+        self.max_health = 10
         self.damage = 10
 
         self.activate = True

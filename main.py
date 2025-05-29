@@ -137,6 +137,19 @@ def load_level(index):
             level = Level(levels[index])
             player.player_rect.x = 300
             player.player_rect.y = 100
+
+
+            player.health = player.max_health
+            player.is_dead = False
+            player.death_finished = False
+            player.death_animation = 0
+            player.invincible = False
+            player.visible = True
+            player.can_move = True
+            enemy = Enemy(500, 300)
+            enemy.activate = True
+            enemy.health = enemy.max_health
+
             current_level_index = index
             return True
 
@@ -179,21 +192,40 @@ def game_loop():
                 if event.key == pygame.K_ESCAPE:
                     return "menu"
 
-
         if not level_complete:
             player.update(level.load_collisions(), enemy)
             enemy.update(level.load_collisions(), player)
 
+            # Проверяем, достиг ли игрок выхода
+            if player.check_exit(level):
+                level_complete = True
+                complete_timer = pygame.time.get_ticks()
+
+        # Если уровень завершен, ждем 2 секунды перед переходом
+        if level_complete and pygame.time.get_ticks() - complete_timer > 2000:
+            # Переходим на следующий уровень или завершаем игру
+            if current_level_index < len(levels) - 1:
+                current_level_index += 1
+                load_level(current_level_index)
+                return "game"
+            else:
+                return "game_complete"  # Нужно добавить этот экран
 
         screen.fill((255, 255, 255))
         level.draw_level(screen)
         player.draw(screen)
         enemy.draw(screen)
 
+        # Отображаем сообщение о завершении уровня
+        if level_complete:
+            font = pygame.font.SysFont(None, 72)
+            text = font.render("Уровень пройден!", True, (255, 0, 0))
+            text_rect = text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
+            screen.blit(text, text_rect)
+
         font = pygame.font.SysFont(None, 36)
         level_text = font.render(f"Уровень: {current_level_index + 1}", True, (255, 255, 255))
         screen.blit(level_text, (820, 10))
-
 
         pygame.display.flip()
 
@@ -202,8 +234,33 @@ def game_loop():
 
     return "exit"
 
+def game_complete_screen():
+    font = pygame.font.SysFont('Arial', 50)
+    small_font = pygame.font.SysFont('Arial', 30)
 
+    while True:
+        screen.fill((0, 0, 0))
 
+        title = font.render("Поздравляем!", True, (255, 215, 0))
+        title_rect = title.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 3))
+        screen.blit(title, title_rect)
+
+        subtitle = font.render("Вы прошли игру!", True, (255, 255, 255))
+        subtitle_rect = subtitle.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
+        screen.blit(subtitle, subtitle_rect)
+
+        hint = small_font.render("Нажмите Enter чтобы вернуться в меню", True, (200, 200, 200))
+        hint_rect = hint.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT - 100))
+        screen.blit(hint, hint_rect)
+
+        pygame.display.flip()
+
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+                sys.exit()
+            elif event.type == pygame.KEYDOWN and event.key == pygame.K_RETURN:
+                return "menu"
 
 def game_over_screen():
     font = pygame.font.SysFont('Arial', 50)
@@ -272,17 +329,32 @@ def main():
             elif result == "exit":
                 app_state = "exit"
 
+
         elif app_state == "game":
+
             result = game_loop()
 
             app_state = result
 
+
         elif app_state == "game_over":
+
             result = game_over_screen()
+
             app_state = result
 
+
+        elif app_state == "game_complete":
+
+            result = game_complete_screen()
+
+            app_state = result
+
+
         elif app_state == "exit":
+
             pygame.quit()
+
             sys.exit()
 
 

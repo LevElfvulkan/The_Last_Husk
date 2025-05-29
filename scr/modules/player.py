@@ -53,13 +53,13 @@ class Player(pygame.sprite.Sprite):
         self.exit_rect = None
         self.level_complete = False
         self.exit_cooldown = 0
-        self.hit_stun_timer = 0  # Таймер стана после удара
-        self.hit_stun_duration = 30 # 0.5 секунды при 60 FPS
-        self.can_move = True  # Может ли игрок двигаться
-        self.blink_timer = 0  # Таймер мигания
-        self.blink_interval = 5  # Частота мигания (кадры)
-        self.visible = True  # Видимость спрайта
-        self.hit_knockback = 10  # Сила отбрасывания при ударе
+        self.hit_stun_timer = 0
+        self.hit_stun_duration = 30
+        self.can_move = True
+        self.blink_timer = 0
+        self.blink_interval = 5
+        self.visible = True
+        self.hit_knockback = 10
 
     # Может ли игрок двигаться
     def move(self):
@@ -82,6 +82,43 @@ class Player(pygame.sprite.Sprite):
                 if (self.is_on_ground):
                     self.y_speed += self.jump_speed
                     self.is_on_ground = False
+
+    def lateralPLatf(self , collision):
+        for rect in collision:
+            if   self.player_rect.colliderect(rect):
+                if self.player_rect.left < rect.right and self.player_rect.left >= rect.left:
+                    self.player_rect.left = rect.right
+                elif self.player_rect.right > rect.left and self.player_rect.right <= rect.right:
+                    self.player_rect.right = rect.left
+
+
+    def withPlatforms(self , collision , enemy):
+        self.y_speed += self.gravity
+        self.player_rect.y += self.y_speed
+        self.is_on_ground = False
+        for rect in collision:
+            if self.player_rect.colliderect(rect):
+                if self.y_speed > 0 and self.player_rect.bottom > rect.top:
+                    self.player_rect.bottom  = rect.top
+                    self.is_on_ground = True
+                    self.y_speed = 0
+                elif self.y_speed < 0 and self.player_rect.top < rect.bottom:
+                    self.player_rect.top =rect.bottom
+                    self.y_speed = 0
+            elif self.y_speed > 0 and self.player_rect.y > 800 :
+                self.player_rect.x = 200
+                self.player_rect.y = 100
+
+        if enemy.activate and self.player_rect.colliderect(enemy.rect):
+
+            if self.player_rect.left < enemy.rect.right and self.player_rect.left >= enemy.rect.left:
+                self.player_rect.left = enemy.rect.right
+            elif self.player_rect.right > enemy.rect.left and self.player_rect.right <= enemy.rect.right:
+                self.player_rect.right = enemy.rect.left
+
+        self.move()
+        self.lateralPLatf(collision)
+
 
 
 
@@ -123,78 +160,6 @@ class Player(pygame.sprite.Sprite):
                 self.attack_animation =0
                 self.has_hit_damage = False
 
-    def take_damage(self, amount):
-        if not self.invincible and self.hit_cooldown <= 0:
-            self.health -= amount
-            if self.health < 0:
-                self.health = 0
-                self.is_dead = True
-                self.death_animation = 0
-
-            self.invincible = True
-            self.invincible_timer = self.invincible_duration
-            self.hit_cooldown = 30
-            self.hit_stun_timer = self.hit_stun_duration
-            self.can_move = False
-            self.blink_timer = self.blink_interval
-            self.visible = True
-
-    def draw_health_bar(self, screen):
-        #полоска здоровья
-        health_bar_width = 200
-        health_bar_height = 20
-        outline_rect = pygame.Rect(10, 10, health_bar_width, health_bar_height)
-        pygame.draw.rect(screen, (255, 0, 0), outline_rect)
-
-        # сколько здоровья на данный момент
-        health_ratio = self.health / self.max_health
-        fill_width = health_ratio * health_bar_width
-        fill_rect = pygame.Rect(10, 10, fill_width, health_bar_height)
-        pygame.draw.rect(screen, (0, 255, 0), fill_rect)
-
-        pygame.draw.rect(screen, (255, 255, 0), outline_rect, 2) # контур
-
-        # сама полоска здоровья
-        font = pygame.font.SysFont(None, 24)
-        health_text = font.render(f"{self.health}/{self.max_health}", True, (255, 255, 255))
-        screen.blit(health_text, (outline_rect.right + 10, outline_rect.y))
-
-    def lateralPLatf(self , collision):
-        for rect in collision:
-            if   self.player_rect.colliderect(rect):
-                if self.player_rect.left < rect.right and self.player_rect.left >= rect.left:
-                    self.player_rect.left = rect.right
-                elif self.player_rect.right > rect.left and self.player_rect.right <= rect.right:
-                    self.player_rect.right = rect.left
-
-
-    def withPlatforms(self , collision , enemy):
-        self.y_speed += self.gravity
-        self.player_rect.y += self.y_speed
-        self.is_on_ground = False
-        for rect in collision:
-            if self.player_rect.colliderect(rect):
-                if self.y_speed > 0 and self.player_rect.bottom > rect.top:
-                    self.player_rect.bottom  = rect.top
-                    self.is_on_ground = True
-                    self.y_speed = 0
-                elif self.y_speed < 0 and self.player_rect.top < rect.bottom:
-                    self.player_rect.top =rect.bottom
-                    self.y_speed = 0
-            elif self.y_speed > 0 and self.player_rect.y > 800 :
-                self.player_rect.x = 200
-                self.player_rect.y = 100
-
-        if enemy.activate and self.player_rect.colliderect(enemy.rect):
-
-            if self.player_rect.left < enemy.rect.right and self.player_rect.left >= enemy.rect.left:
-                self.player_rect.left = enemy.rect.right
-            elif self.player_rect.right > enemy.rect.left and self.player_rect.right <= enemy.rect.right:
-                self.player_rect.right = enemy.rect.left
-
-        self.move()
-        self.lateralPLatf(collision)
-
     def attack_collision(self, collision):
         if not self.is_attacking:
             return
@@ -231,17 +196,56 @@ class Player(pygame.sprite.Sprite):
                 enemy.knockback_speed = 25 * enemy.knockback_direction
 
 
+
+    def take_damage(self, amount):
+        if not self.invincible and self.hit_cooldown <= 0:
+            self.health -= amount
+            if self.health < 0:
+                self.health = 0
+                self.is_dead = True
+                self.death_animation = 0
+
+            self.invincible = True
+            self.invincible_timer = self.invincible_duration
+            self.hit_cooldown = 30
+            self.hit_stun_timer = self.hit_stun_duration
+            self.can_move = False
+            self.blink_timer = self.blink_interval
+            self.visible = True
+
+    def draw_health_bar(self, screen):
+        #полоска здоровья
+        health_bar_width = 200
+        health_bar_height = 20
+        outline_rect = pygame.Rect(10, 10, health_bar_width, health_bar_height)
+        pygame.draw.rect(screen, (255, 0, 0), outline_rect)
+
+        # сколько здоровья на данный момент
+        health_ratio = self.health / self.max_health
+        fill_width = health_ratio * health_bar_width
+        fill_rect = pygame.Rect(10, 10, fill_width, health_bar_height)
+        pygame.draw.rect(screen, (0, 255, 0), fill_rect)
+
+        pygame.draw.rect(screen, (255, 255, 0), outline_rect, 2) # контур
+
+        # сама полоска здоровья
+        font = pygame.font.SysFont(None, 24)
+        health_text = font.render(f"{self.health}/{self.max_health}", True, (255, 255, 255))
+        screen.blit(health_text, (outline_rect.right + 10, outline_rect.y))
+
+
+
     def death(self):
         if self.is_dead and not self.death_finished:
             self.death_timer += 1
-            # Обновляем анимацию каждые 12 кадров (5 кадров анимации)
+
             if self.death_timer % 12 == 0 and self.death_animation < len(self.playerDeath) - 1:
                 self.death_animation += 1
 
             if self.death_timer >= self.death_duration:
                 self.death_finished = True
 
-    def update(self, collisions , enemy):
+    def update(self, collisions , enemy): #основнфе игровые методы
 
         if self.hit_stun_timer > 0:
             self.hit_stun_timer -= 1
@@ -319,3 +323,8 @@ class Player(pygame.sprite.Sprite):
                             screen.blit(flipped_idle[self.animation // 6], (self.player_rect.x, self.player_rect.y))
                             self.animation += 1
             self.draw_health_bar(screen)
+
+    def check_exit(self, level):
+        if level.exit_rect and self.player_rect.colliderect(level.exit_rect):
+            return True
+        return False

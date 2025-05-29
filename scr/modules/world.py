@@ -15,6 +15,7 @@ class Level(pygame.sprite.Sprite):
     def __init__(self , filename):
         self.tmx_data = pytmx.load_pygame(filename)
         self.background = None
+        self.exit_rect = None
 
         try :
             self.background = pygame.image.load("assets/bg/Bg_level.jpg").convert()
@@ -24,12 +25,24 @@ class Level(pygame.sprite.Sprite):
             self.background.fill((0, 0, 0))
             print(f"Фон для уровня  не найден, используется черный фон")
 
+        self.load_exit()
+
+    def load_exit(self):
+        # Ищем слой с именем "exit" в Tiled
+        if "exit" in self.tmx_data.layernames:
+            layer = self.tmx_data.get_layer_by_name("exit")
+            for obj in layer:
+                self.exit_rect = pygame.Rect(
+                    obj.x, obj.y,
+                    obj.width, obj.height
+                )
+                break
     def load_collisions(self):
         collision_rects = []
         if "map" in self.tmx_data.layernames:
             layer = self.tmx_data.get_layer_by_name("map")
             for x, y, tile in layer.tiles():
-                if tile:  # Если тайл существует
+                if tile:
                     collision_rects.append(pygame.Rect(
                         x * self.tmx_data.tilewidth,
                         y * self.tmx_data.tileheight,
