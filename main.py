@@ -13,7 +13,7 @@ class Menu:
         self.small_font = pygame.font.SysFont('Arial', 30)
         self.selected = 0
         self.main_options = ["Начать игру", "Настройки", "Выход"]
-        self.level_options = ["Легкий уровень", "Средний уровень", "Сложный уровень", "Назад"]
+        self.level_options = ["Уровень 1", "Уровень 2", "Уровень 3", "Назад"]
         self.settings_options = ["Назад"]
         self.current_options = self.main_options
         self.state = "main"  # может быть "main", "level_select", "settings"
@@ -130,7 +130,7 @@ class Menu:
                         return None
         return None
 def load_level(index):
-    global level, current_level_index
+    global level, current_level_index , enemies
 
     if 0 <= index < len(levels):
         try:
@@ -146,10 +146,7 @@ def load_level(index):
             player.invincible = False
             player.visible = True
             player.can_move = True
-            enemy = Enemy(500, 300)
-            enemy.activate = True
-            enemy.health = enemy.max_health
-
+            enemies = level.load_enemies()
             current_level_index = index
             return True
 
@@ -163,7 +160,9 @@ def load_level(index):
 def draw_all():
     level.draw_level(screen)
     player.draw(screen)
-    enemy.draw(screen)
+    for enemy in enemies:
+        if enemy.activate or enemy.is_dying:
+            enemy.draw(screen)
 
     font = pygame.font.SysFont(None, 36)
     level_text = font.render(f"Уровень: {current_level_index + 1}", True, (255, 255, 255))
@@ -176,7 +175,8 @@ def draw_all():
 
 
 def game_loop():
-    global running, current_level_index
+    global running, current_level_index , enemies
+
 
     clock = pygame.time.Clock()
     level_complete = False
@@ -193,13 +193,20 @@ def game_loop():
                     return "menu"
 
         if not level_complete:
-            player.update(level.load_collisions(), enemy)
-            enemy.update(level.load_collisions(), player)
+            player.update(level.load_collisions(), enemies)
 
-            # Проверяем, достиг ли игрок выхода
+            # Обновляем всех живых врагов
+
+
+            for enemy in enemies:
+
+                enemy.update(level.load_collisions(), player)
+
+            # Проверка на завершение уровня
             if player.check_exit(level):
                 level_complete = True
                 complete_timer = pygame.time.get_ticks()
+
 
         # Если уровень завершен, ждем 2 секунды перед переходом
         if level_complete and pygame.time.get_ticks() - complete_timer > 2000:
@@ -214,12 +221,12 @@ def game_loop():
         screen.fill((255, 255, 255))
         level.draw_level(screen)
         player.draw(screen)
-        enemy.draw(screen)
+        for enemy in enemies:
+            enemy.draw(screen)
 
-        # Отображаем сообщение о завершении уровня
         if level_complete:
             font = pygame.font.SysFont(None, 72)
-            text = font.render("Уровень пройден!", True, (255, 0, 0))
+            text = font.render("Уровень пройден!", True, (255, 0, 0 ))
             text_rect = text.get_rect(center=(SCREEN_WIDTH // 2, SCREEN_HEIGHT // 2))
             screen.blit(text, text_rect)
 
@@ -292,7 +299,7 @@ def game_over_screen():
 
 
 def main():
-    global screen, levels, current_level_index, level, player, enemy, running
+    global screen, levels, current_level_index, level, player, enemy, running , enemies
 
     pygame.init()
     screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
@@ -302,7 +309,7 @@ def main():
     current_level_index = 0
     level = Level(levels[current_level_index])
     player = Player(300, 100)
-    enemy = Enemy(500, 300)
+    enemies = level.load_enemies()
     running = True
 
     menu = Menu(screen)

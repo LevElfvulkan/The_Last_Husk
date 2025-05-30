@@ -1,6 +1,6 @@
 import pygame
 import pytmx
-
+from ..modules.enemy import Enemy
 class Platform(pygame.sprite.Sprite):
     def __init__(self  , x , y  , width , height  , color = (0,255,0)):
         super().__init__()
@@ -11,11 +11,13 @@ class Platform(pygame.sprite.Sprite):
         self.rect.y= y
 
 
+
 class Level(pygame.sprite.Sprite):
     def __init__(self , filename):
         self.tmx_data = pytmx.load_pygame(filename)
         self.background = None
         self.exit_rect = None
+        self.enemy_positions = [[300,300] , [300 ,650]]
 
         try :
             self.background = pygame.image.load("assets/bg/Bg_level.jpg").convert()
@@ -51,6 +53,12 @@ class Level(pygame.sprite.Sprite):
                     ))
         return collision_rects
 
+
+    def load_enemies(self):
+        enemies = []
+        for pos in self.enemy_positions:
+            enemies.append(Enemy(pos[0] , pos[1])  )
+        return enemies
     def draw_level(self, surface):
         if self.background:
             surface.blit(self.background, (0 ,0))

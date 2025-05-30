@@ -37,9 +37,12 @@ class Enemy(pygame.sprite.Sprite):
         self.death_animation_frame = 0
         self.death_animation_speed = 0.3
         self.death_delay = 12
+        self.death_finished = False
 
         self.original_x = x
         self.patrol_range = 250
+        self.enemy_positions = []
+
 
 
 
@@ -81,6 +84,7 @@ class Enemy(pygame.sprite.Sprite):
                 return
             self.death_animation_frame += self.death_animation_speed
             if self.death_animation_frame >= len(self.enemyDeath):
+                self.death_finished = True
                 self.activate = False
 
             return
@@ -136,10 +140,27 @@ class Enemy(pygame.sprite.Sprite):
         self.speed = 0
         self.death_delay = 12
 
+    def reset(self):
+        """Сброс состояния врага при загрузке нового уровня"""
+        self.health = self.max_health
+        self.activate = True
+        self.is_dying = False
+        self.death_animation_frame = 0
+        self.death_finished = False
+        self.rect.x = 500
+        self.rect.y = 300
+        self.direction = 1
+        self.knockback_delay = 0
+        self.attack_cooldown = 0
 
+    def remove(self):
+        """Помечает врага для удаления из игры (завершает анимацию смерти)."""
+        if not self.is_dying:  # Если еще не начали умирать
+            self.death_animation()  # Запускаем анимацию смерти
+        self.activate = False
 
     def draw(self, screen):
-        if not self.activate and not self.is_dying:
+        if not self.activate or self.death_finished:
             return
 
         if self.is_dying:
