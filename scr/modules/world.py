@@ -10,6 +10,11 @@ class Platform(pygame.sprite.Sprite):
         self.rect.x = x
         self.rect.y= y
 
+level_enemies = {
+    'level1': [(500, 300), (800, 400)],
+    'level2': [(600, 200), (700, 500), (900, 300)],
+    'level3': [(400, 100), (500, 400), (700, 200), (900, 500)]
+}
 
 
 class Level(pygame.sprite.Sprite):
@@ -17,8 +22,7 @@ class Level(pygame.sprite.Sprite):
         self.tmx_data = pytmx.load_pygame(filename)
         self.background = None
         self.exit_rect = None
-        self.enemy_positions = [[300,300] , [300 ,650]]
-
+        self.enemy_positions = []
         try :
             self.background = pygame.image.load("assets/bg/Bg_level.jpg").convert()
             self.background = pygame.transform.scale(self.background,(960 , 800))
@@ -55,10 +59,7 @@ class Level(pygame.sprite.Sprite):
 
 
     def load_enemies(self):
-        enemies = []
-        for pos in self.enemy_positions:
-            enemies.append(Enemy(pos[0] , pos[1])  )
-        return enemies
+        return [Enemy(x, y) for x, y in self.enemy_positions]
     def draw_level(self, surface):
         if self.background:
             surface.blit(self.background, (0 ,0))

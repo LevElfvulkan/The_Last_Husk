@@ -131,13 +131,23 @@ class Menu:
         return None
 def load_level(index):
     global level, current_level_index , enemies
+    # Словарь с ручными позициями врагов для каждого уровня
+    level_enemies = {
+        'level1.tmx': [(500, 100), (500, 300)],
+        'level2.tmx': [(500, 100), (400, 700), (400, 550)],
+        'level3.tmx': [(300, 600), (500, 400), (400, 200) , (300 , 500 )]
+    }
+    level_files = ['level1.tmx', 'level2.tmx', 'level3.tmx']
+    if 0 <= index < len(level_files):
 
-    if 0 <= index < len(levels):
+
         try:
-            level = Level(levels[index])
+            level = Level(level_files[index])
+
+            level.enemy_positions = level_enemies[level_files[index]]
+            enemies = level.load_enemies()
             player.player_rect.x = 300
             player.player_rect.y = 100
-
 
             player.health = player.max_health
             player.is_dead = False
@@ -146,7 +156,15 @@ def load_level(index):
             player.invincible = False
             player.visible = True
             player.can_move = True
-            enemies = level.load_enemies()
+
+            if index == 2:
+                for enemy in enemies:
+                    enemy.health = 30
+                player.player_rect.x = 800
+
+
+
+
             current_level_index = index
             return True
 

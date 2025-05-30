@@ -1,5 +1,5 @@
 import pygame
-
+import random
 
 class Enemy(pygame.sprite.Sprite):
     def __init__(self ,x , y):
@@ -39,6 +39,10 @@ class Enemy(pygame.sprite.Sprite):
         self.death_delay = 12
         self.death_finished = False
 
+        self.max_patrol_range = 200  # Максимально возможный диапазон патрулирования
+        self.current_patrol_range = random.randint(100, self.max_patrol_range)  # Случайный диапазон
+        self.patrol_change_timer = 0
+        self.patrol_change_interval = random.randint(2, 5) * 60
         self.original_x = x
         self.patrol_range = 250
         self.enemy_positions = []
@@ -93,10 +97,7 @@ class Enemy(pygame.sprite.Sprite):
             self.death_animation()
             return
 
-        if self.rect.x > self.original_x + self.patrol_range / 2:
-            self.direction = -1  # Разворачиваемся если вышли за правую границу
-        elif self.rect.x < self.original_x - self.patrol_range / 2:
-            self.direction = 1  # Разворачиваемся если вышли за левую границу
+        self.randow_patrol()
 
         if self.knockback_delay > 0 :
             self.knockback_delay -=1
@@ -133,7 +134,20 @@ class Enemy(pygame.sprite.Sprite):
                     self.direction *= -1
                     break
 
+    def randow_patrol(self):
+        self.patrol_change_timer += 1
+        if self.patrol_change_timer >= self.patrol_change_interval:
+            self.current_patrol_range = random.randint(100, self.max_patrol_range)
+            self.patrol_change_interval = random.randint(2, 5) * 60
+            self.patrol_change_timer = 0
 
+        # Движение с новым диапазоном
+        if self.rect.x > self.original_x + self.current_patrol_range / 2:
+            self.direction = -1
+        elif self.rect.x < self.original_x - self.current_patrol_range / 2:
+            self.direction = 1
+
+        self.rect.x += self.speed * self.direction
     def death_animation(self):
         self.is_dying = True
         self.death_animation_frame = 0
@@ -153,11 +167,6 @@ class Enemy(pygame.sprite.Sprite):
         self.knockback_delay = 0
         self.attack_cooldown = 0
 
-    def remove(self):
-        """Помечает врага для удаления из игры (завершает анимацию смерти)."""
-        if not self.is_dying:  # Если еще не начали умирать
-            self.death_animation()  # Запускаем анимацию смерти
-        self.activate = False
 
     def draw(self, screen):
         if not self.activate or self.death_finished:
